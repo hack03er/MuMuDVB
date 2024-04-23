@@ -153,6 +153,14 @@ then
   AC_DEFINE(TUNE_OLD, 1, Define if you want the old code for tuning)
 fi
 
+AC_ARG_ENABLE(rewrite_nit_support,
+  [ --enable-rewrite_nit_support    Build with rewrite nit support],,[enable_rewrite_nit_support="no"])
+
+if test "${enable_rewrite_nit_support}" = "yes"
+then
+  AC_DEFINE(REWRITE_NIT_SUPPORT, 1, Define if you want to rewrite the NIT Table)
+fi
+
 # Checks for header files.
 AC_HEADER_RESOLV
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h sys/time.h syslog.h unistd.h values.h])
@@ -218,6 +226,12 @@ fi
 
 if test "${enable_tune_old}" = "yes" ; then
         echo "Build with old tuning code:                         yes"
+fi
+
+if test "${rewrite_nit_support}" != "no" ; then
+        echo "Build with rewrite nit support:                     yes"
+else
+        echo "Build with rewrite nit support:                      no"
 fi
 
 echo ""
