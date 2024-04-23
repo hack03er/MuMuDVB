@@ -676,6 +676,34 @@ typedef struct {
 #endif
 } descr_sat_delivery_t;
 
+/** @brief 0x44 cable_delivery_system_descriptor */
+typedef struct {
+  uint8_t descriptor_tag                         :8;
+  uint8_t descriptor_length                      :8;
+  uint8_t frequency_4                            :8;
+  uint8_t frequency_3                            :8;
+  uint8_t frequency_2                            :8;
+  uint8_t frequency_1                            :8;
+  uint8_t reserved_future_use_1                  :8;
+#ifdef __BIG_ENDIAN__
+  uint8_t reserved_future_use_2                  :4;
+  uint8_t FEC_outer                              :4;
+#else
+  uint8_t FEC_outer                              :4;
+  uint8_t reserved_future_use_2                  :4;
+#endif
+  uint8_t modulation_type                        :8;
+  uint8_t symbol_rate_12                         :8;
+  uint8_t symbol_rate_34                         :8;
+  uint8_t symbol_rate_56                         :8;
+#ifdef __BIG_ENDIAN__
+  uint8_t symbol_rate_7                          :4;
+  uint8_t FEC_inner                              :4;
+#else
+  uint8_t FEC_inner                              :4;
+  uint8_t symbol_rate_7                          :4;
+#endif
+} descr_cable_delivery_t;
 
 /***************************************************
  *                ATSC PSIP tables                 *

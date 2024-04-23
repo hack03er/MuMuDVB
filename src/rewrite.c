@@ -47,6 +47,12 @@ static char *log_module="Rewrite: ";
 void init_rewr_v(rewrite_parameters_t *rewr_p)
 {
 	*rewr_p=(rewrite_parameters_t){
+#ifdef REWRITE_NIT_SUPPORT
+				.rewrite_nit = OPTION_UNDEFINED,
+				.nit_version = -1,
+				.nit_needs_update = true,
+				.full_nit = NULL,
+#endif
 				.rewrite_pmt = OPTION_UNDEFINED,
 				.rewrite_pat = OPTION_UNDEFINED,
 				.pat_version=-1,
@@ -129,7 +135,27 @@ int rewrite_init(rewrite_parameters_t *rewr_p)
 		pthread_mutex_init(&rewr_p->full_eit->packetmutex,NULL);
 	}
 
-return 0;
+#ifdef REWRITE_NIT_SUPPORT
+	/*****************************************************/
+	//NIT rewriting
+	//memory allocation for MPEG2-TS
+	//packet structures
+	/*****************************************************/
+
+	if (rewr_p->rewrite_nit == OPTION_ON) {
+		rewr_p->full_nit = malloc(sizeof(mumudvb_ts_packet_t));
+		if (rewr_p->full_nit == NULL) {
+			log_message(log_module, MSG_ERROR, "Problem with malloc : %s file : %s line %d\n",
+			            strerror(errno), __FILE__, __LINE__);
+			set_interrupted(ERROR_MEMORY << 8);
+			return 1;
+		}
+		memset(rewr_p->full_nit, 0, sizeof(mumudvb_ts_packet_t));   //we clear it
+		pthread_mutex_init(&rewr_p->full_nit->packetmutex, NULL);
+	}
+#endif
+
+	return 0;
 }
 
 
@@ -214,6 +240,20 @@ int read_rewrite_configuration(rewrite_parameters_t *rewrite_vars, char *substri
 		else
 			rewrite_vars->sdt_force_eit = OPTION_OFF;
 	}
+#ifdef REWRITE_NIT_SUPPORT
+	else if (!strcmp (substring, "rewrite_nit"))
+	{
+		substring = strtok (NULL, delimiteurs);
+		if(atoi (substring))
+		{
+			rewrite_vars->rewrite_nit = OPTION_ON;
+			log_message( log_module, MSG_INFO,
+					"You have enabled the NIT Rewriting\n");
+		}
+		else
+			rewrite_vars->rewrite_nit = OPTION_OFF;
+	}
+#endif
 	else
 		return 0; //Nothing concerning rewrite, we return 0 to explore the other possibilities
 

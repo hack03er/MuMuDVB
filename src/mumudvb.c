@@ -1636,6 +1636,16 @@ int main (int argc, char **argv)
 			{
 				eit_rewrite_new_global_packet(actual_ts_packet, &rewrite_vars);
 			}
+#ifdef REWRITE_NIT_SUPPORT
+			/******************************************************/
+			//NIT rewrite
+			/******************************************************/
+			if ((pid == 0x10) && //This is a NIT PID
+				rewrite_vars.rewrite_nit == OPTION_ON) //AND we asked for rewrite
+			{
+
+			}
+#endif // REWRITE_NIT_SUPPORT
 
 
 			/******************************************************/

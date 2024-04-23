@@ -78,6 +78,16 @@ typedef struct eit_packet_t{
  * This structure contain the parameters needed for rewriting
  */
 typedef struct rewrite_parameters_t{
+#ifdef REWRITE_NIT_SUPPORT
+	/** Do we rewrite the NIT pid */
+	option_status_t rewrite_nit;
+	/** The actual version of the NIT pid */
+	int nit_version;
+	bool nit_needs_update;
+	/** The Complete NIT PID which we are storing */
+	mumudvb_ts_packet_t *full_nit;
+
+#endif
 	/**Do we rewrite the PMT pid ?*/
 	option_status_t rewrite_pmt;
 
