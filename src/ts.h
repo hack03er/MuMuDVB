@@ -898,12 +898,15 @@ struct mumudvb_channel_t;
 void ts_display_pat(char* log_module,unsigned char *buf);
 void ts_display_country_avaibility_descriptor(char* log_module,unsigned char *buf);
 
+void ts_display_nit(char* mod_log_module,unsigned char *buf);
 void ts_display_nit_network_descriptors(char *log_module, unsigned char *buf,int descriptors_loop_len);
 void ts_display_network_name_descriptor(char* log_module, unsigned char *buf);
 void ts_display_multilingual_network_name_descriptor(char* log_module, unsigned char *buf);
+void ts_display_nit_transport_stream_loop(char *mod_log_module, unsigned char *buf, int stream_loop_len);
 void ts_display_service_list_descriptor(char* log_module, unsigned char *buf);
 void ts_display_lcn_descriptor(char* log_module, unsigned char *buf);
 void ts_display_satellite_delivery_system_descriptor(char* log_module, unsigned char *buf);
+void ts_display_cable_delivery_system_descriptor(char *mod_log_module, unsigned char *buf);
 void ts_display_terrestrial_delivery_system_descriptor(char* log_module, unsigned char *buf);
 void ts_display_frequency_list_descriptor(char* log_module, unsigned char* buf);
 
