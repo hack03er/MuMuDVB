@@ -275,4 +275,84 @@ void save_nit_section(rewrite_parameters_t *rewr_p, unsigned char *full_nit_sect
 	}
 }
 
+/**
+ * @brief Writes a NULL packet to @c dest
+ */
+void get_null_packet(unsigned char *dest)
+{
+	memcpy(dest, &NULL_TS_HEADER, NIT_TS_HEADER_LEN);
+	char null_message[] = "INCOMPLETE NIT";
+	strcpy((char *)(dest + NIT_TS_HEADER_LEN), null_message);
+	memset(dest + NIT_TS_HEADER_LEN + strlen(null_message), 0xFF,
+	       TS_PACKET_SIZE - NIT_TS_HEADER_LEN - strlen(null_message));
+}
+
+/**
+ * @brief Writes a rewritten nit packet to dest or a NULL packet if none available
+ * @param section source for selected cached nit section
+ * @param packet_number current index in section
+ * @param dest destination for rewritten nit packet
+ */
+void get_cached_packet(const nit_section_t *section, int packet_number, unsigned char *dest)
+{
+	// the first time 1 byte less is copied
+	int bytes_copied = packet_number * (TS_PACKET_SIZE - NIT_TS_HEADER_LEN) - 1;
+	bytes_copied = bytes_copied < 0 ? 0 : bytes_copied;
+	size_t rest_len = TS_PACKET_SIZE;
+
+	// ts stream is corrupted: no new section was announced
+	if ((unsigned int)bytes_copied >= section->original_section_len) {
+		get_null_packet(dest);
+		log_message(log_module, MSG_WARN, "NIT TS input was corrupted, resyncing at next section");
+		log_message(log_module, MSG_WARN, "Requested: %d/%lu", bytes_copied, section->original_section_len);
+		return;
+	}
+	// stuff to original size
+	if ((unsigned int)bytes_copied >= section->rewritten_section_len) {
+		get_null_packet(dest);
+		return;
+	}
+
+	ts_header_t *dest_header = (ts_header_t *)dest;
+	memcpy(dest, &nit_ts_header, NIT_TS_HEADER_LEN);
+	rest_len -= NIT_TS_HEADER_LEN;
+	nit_ts_header.continuity_counter = (nit_ts_header.continuity_counter + 1) % 16;
+
+	if (packet_number == 0) {              // this is the first packet, so pointer field is necessary
+		dest[NIT_TS_HEADER_LEN] = 0;   // ISO 13818.1 2.4.4.2 Semantics definition of fields in pointer syntax
+		dest_header->payload_unit_start_indicator = 1;
+		rest_len--;
+	}
+
+	size_t bytes_left = section->rewritten_section_len - bytes_copied;
+
+	if (bytes_left >= rest_len) {
+		memcpy(dest + (TS_PACKET_SIZE - rest_len), section->rewritten_section + bytes_copied, rest_len);
+	} else {
+		memcpy(dest + (TS_PACKET_SIZE - rest_len), section->rewritten_section + bytes_copied,
+		       bytes_left);
+		memset(dest + (TS_PACKET_SIZE - rest_len) + bytes_left, 0xFF, rest_len - bytes_left);
+	}
+}
+
+/**
+ * @brief Writes a rewritten nit packet to dest or a NULL packet if none available
+ * @param nit_section_array source for cached nit sections
+ * @param section_number current section number
+ * @param packet_number current index in section
+ * @param dest destination for rewritten nit packet
+ */
+void get_nit_packet(const nit_section_t *nit_section_array, int section_number, int packet_number, unsigned char *dest)
+{
+	if (nit_section_array != NULL) {
+		const nit_section_t *current_nit_section = &nit_section_array[section_number];
+		if (current_nit_section != NULL && current_nit_section->section_ok) {
+			get_cached_packet(current_nit_section, packet_number, dest);
+			return;
+		}
+	}
+	log_message(log_module, MSG_DEBUG, "No cached packet available for section %d", section_number);
+	get_null_packet(dest);
+}
+
 void nit_rewrite_new_global_packet(unsigned char *ts_packet, rewrite_parameters_t *rewrite_vars) { return; }
