@@ -73,6 +73,13 @@ typedef struct eit_packet_t{
 	struct eit_packet_t *next;
 }eit_packet_t;
 
+typedef struct {
+    bool section_ok;
+    size_t rewritten_section_len;
+    size_t original_section_len;
+    unsigned char rewritten_section[1024];
+} nit_section_t;
+
 
 /** @brief the parameters for the rewriting
  * This structure contain the parameters needed for rewriting
@@ -86,7 +93,8 @@ typedef struct rewrite_parameters_t{
 	bool nit_needs_update;
 	/** The Complete NIT PID which we are storing */
 	mumudvb_ts_packet_t *full_nit;
-
+	uint8_t nit_section_count;
+	nit_section_t *nit_section_array;
 #endif
 	/**Do we rewrite the PMT pid ?*/
 	option_status_t rewrite_pmt;
