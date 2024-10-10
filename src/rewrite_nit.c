@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "autoconf.h"
+#include "crc32.h"
 #include "errors.h"
 #include "log.h"
 #include "mumudvb.h"
@@ -102,6 +103,134 @@ int read_rewrite_nit_config(const char *substring)
 		return 0;
 	}
 	return 1;
+}
+
+ts_header_t nit_ts_header =  {
+	.sync_byte = TS_SYNC_BYTE,
+	.transport_error_indicator = 0,
+	.payload_unit_start_indicator = 0,
+	.transport_priority = 0,
+	.pid_hi = 0x0010 >> 8,
+	.pid_lo = 0x0010,
+	.transport_scrambling_control = 0,
+	.adaptation_field_control = 0b01
+};
+
+#define NIT_TS_HEADER_LEN 4
+
+const ts_header_t NULL_TS_HEADER = {
+	.sync_byte = TS_SYNC_BYTE,
+	.transport_error_indicator = 0,
+	.payload_unit_start_indicator = 0,
+	.transport_priority = 0,
+	.pid_hi = 0x1FFF >> 8,
+	.pid_lo = 0x1FFFF & 0x00FF,
+	.transport_scrambling_control = 0,
+	.adaptation_field_control = 0b01
+};
+
+/**
+ * @brief Rewrites frequencies according to @c freq_map
+ * @param cable_descriptor @c cable_delivery_system_descriptor that should be rewritten
+ * @return 1 on rewrite
+ * @return 0 if freq was not rewritten
+ */
+int rewrite_cable_delivery_system_descriptor(descr_cable_delivery_t *cable_descriptor)
+{
+	uint32_t freq = (cable_descriptor->frequency_4 << 24) + (cable_descriptor->frequency_3 << 16)
+	                + (cable_descriptor->frequency_2 << 8) + cable_descriptor->frequency_1;
+
+	for (size_t i = 0; i < frequency_cnt; ++i) {
+		if (freq_map[i].oldfreq == freq) {
+			cable_descriptor->frequency_4 = freq_map[i].newfreq >> 24;
+			cable_descriptor->frequency_3 = freq_map[i].newfreq >> 16;
+			cable_descriptor->frequency_2 = freq_map[i].newfreq >> 8;
+			cable_descriptor->frequency_1 = freq_map[i].newfreq & 0xFF;
+			log_message(log_module, MSG_DEBUG, "Patched freq %x with new freq %x", freq,
+			            freq_map[i].newfreq);
+			return 1;
+		}
+	}
+	return 0;
+}
+
+/**
+ * @brief Iterates through all transport streams and rewrites the frequencies
+ * @note only @c cable_delivery_system_descriptor are patched for now
+ * @param ts_stream pointer to the first transport stream
+ * @param stream_loop_len @c transport_stream_loop_length
+ * @return the number of removed transport streams in bytes
+ */
+size_t rewrite_transport_stream(unsigned char *ts_stream, size_t stream_loop_len)
+{
+	if (stream_loop_len == 0) {
+		log_message(log_module, MSG_FLOOD, "- transport stream loop len is 0");
+		return 0;
+	}
+	size_t removed_bytes = 0;
+
+	while (stream_loop_len > 0) {
+		int descriptors_loop_length = HILO(((nit_ts_t *)ts_stream)->transport_descriptors_length);
+
+		size_t stream_length = NIT_TS_LEN + descriptors_loop_length;
+
+		if (descriptors_loop_length == 0) break;
+		descr_cable_delivery_t *descriptor = (descr_cable_delivery_t *)(ts_stream + NIT_TS_LEN);
+
+		bool remove_stream = 0;
+		while (descriptors_loop_length > 0) {
+			switch (descriptor->descriptor_tag) {
+			case 0x44:
+				remove_stream = rewrite_cable_delivery_system_descriptor(descriptor) == 0;
+				break;
+			default:
+				log_message(log_module, MSG_FLOOD,
+				            "- did not rewrite transport stream descriptor with tag: 0x%x",
+				            descriptor->descriptor_tag);
+				break;
+			}
+			// descriptor length is data length + length(tag + len)
+			descriptor += descriptor->descriptor_length + 2;
+			descriptors_loop_length -= (descriptor->descriptor_length + 2);
+		}
+		stream_loop_len -= stream_length;
+		size_t rest_len = stream_loop_len + 4; // rest of loop + CRC
+
+		if (remove_stream) {
+			log_message(log_module, MSG_DEBUG, "Removed redundant stream from NIT");
+			memmove(ts_stream, ts_stream + stream_length, rest_len);
+			removed_bytes += stream_length;
+		} else {
+			ts_stream += stream_length;
+		}
+	}
+	return removed_bytes;
+}
+
+/**
+ * @brief Rewrites frequencies in a nit section according to @c freq_map
+ * @note only @c cable_delivery_system_descriptor are patched for now
+ * @param full_nit_section pointer to the start of a nit section
+ */
+void rewrite_nit_section(unsigned char *full_nit_section)
+{
+	nit_t *nit = (nit_t *)full_nit_section;
+	nit_mid_t *nit_mid = (nit_mid_t *)(full_nit_section + NIT_LEN + HILO(nit->network_descriptor_length));
+
+	size_t removed_bytes = rewrite_transport_stream((unsigned char *)nit_mid + SIZE_NIT_MID,
+	                         HILO(nit_mid->transport_stream_loop_length));
+	// adjust transport stream loop length and section length
+	size_t new_ts_loop_length = HILO(nit_mid->transport_stream_loop_length) - removed_bytes;
+	nit_mid->transport_stream_loop_length_hi = (new_ts_loop_length >> 8) & 0x0f;
+	nit_mid->transport_stream_loop_length_lo = new_ts_loop_length & 0xff;
+
+	size_t new_section_length = HILO(nit->section_length) - removed_bytes;
+	nit->section_length_hi = (new_section_length >> 8) & 0x0f;
+	nit->section_length_lo = new_section_length & 0xff;
+
+	ts_display_nit(log_module, (unsigned char *)nit);
+
+	setCRC32(full_nit_section);
 }
 
 
