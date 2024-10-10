@@ -355,4 +355,65 @@ void get_nit_packet(const nit_section_t *nit_section_array, int section_number, 
 	get_null_packet(dest);
 }
 
-void nit_rewrite_new_global_packet(unsigned char *ts_packet, rewrite_parameters_t *rewrite_vars) { return; }
+int global_packet_number = -1;
+int global_section_number = -1;
+
+/**
+ * @brief Swapping the NIT packet with a patched packet for every channel
+ * @param ts_packet fresh ts_packet with size 188
+* @param rewrite_vars the parameters for nit rewriting
+ */
+void nit_rewrite_new_global_packet(unsigned char *ts_packet, rewrite_parameters_t *rewrite_vars)
+{
+	unsigned char *get_ts = ts_packet;
+	while (get_ts_packet(get_ts, rewrite_vars->full_nit)) {
+		get_ts = NULL;
+		nit_t *nit = (nit_t *)(rewrite_vars->full_nit->data_full);
+
+		if (nit->current_next_indicator == 0) {
+			log_message(log_module, MSG_DEBUG, "NIT not yet valid, we get a new one (current_next_indicator == 0)");
+			return;
+		}
+		if (table_needs_update(log_module, rewrite_vars->nit_version, ts_packet)) {
+			rewrite_vars->nit_version = nit->version_number;
+
+			rewrite_vars->nit_section_count = nit->last_section_number + 1;
+			if (nit->section_number > rewrite_vars->nit_section_count) {
+				log_message(log_module, MSG_ERROR, "NIT section number out of range.");
+				break;
+			}
+			rewrite_vars->nit_section_array = reallocarray(rewrite_vars->nit_section_array, rewrite_vars->nit_section_count, sizeof(nit_section_t));
+			if (rewrite_vars->nit_section_array == NULL) {
+				log_message(log_module, MSG_ERROR, "Problem with malloc : %s file : %s line %d",
+							strerror(errno), __FILE__, __LINE__);
+				set_interrupted(ERROR_MEMORY << 8);
+				return;
+			}
+			for (int i = 0; i < rewrite_vars->nit_section_count; ++i) {
+				rewrite_vars->nit_section_array[i].section_ok = false;
+				rewrite_vars->nit_section_array[i].original_section_len = 0;
+				rewrite_vars->nit_section_array[i].rewritten_section_len = 0;
+			}
+		}
+		save_nit_section(rewrite_vars, rewrite_vars->full_nit->data_full);
+	}
+
+
+	ts_header_t *ts_header = (ts_header_t *)ts_packet;
+	bool new_section = ts_header->payload_unit_start_indicator == 1;
+
+	global_packet_number++;
+
+	if (new_section) {
+		nit_t *nit_header = (nit_t *)(ts_packet + NIT_TS_HEADER_LEN + 1);
+		global_section_number = nit_header->section_number;
+		global_packet_number = 0;
+	}
+
+	unsigned char dest[TS_PACKET_SIZE];
+	get_nit_packet(rewrite_vars->nit_section_array, global_section_number, global_packet_number, dest);
+
+	log_message(log_module, MSG_FLOOD, "global section number: %d, global packet number: %d", global_section_number,
+	            global_packet_number);
+	memcpy(ts_packet, dest, TS_PACKET_SIZE);
+}
