@@ -233,5 +233,46 @@ void rewrite_nit_section(unsigned char *full_nit_section)
 	setCRC32(full_nit_section);
 }
 
+/**
+ * @brief Caches the current nit section
+ * @param rewr_p the parameters for nit rewriting
+ * @param full_nit_section section that should be rewritten
+ */
+void save_nit_section(rewrite_parameters_t *rewr_p, unsigned char *full_nit_section)
+{
+	nit_t *nit = (nit_t *)full_nit_section;
+	if (rewr_p->nit_section_array[nit->section_number].section_ok == true) {
+		return;
+	}
+
+	unsigned char *dest = rewr_p->nit_section_array[nit->section_number].rewritten_section;
+
+	if (rewr_p->full_nit->len_full > 1024) {
+		log_message(log_module, MSG_ERROR, "len_full: %d", rewr_p->full_nit->len_full);
+		log_message(log_module, MSG_ERROR, "section_len: %d", HILO(nit->section_length) + 3);
+		return;
+	}
+	memcpy(dest, full_nit_section, HILO(nit->section_length) + 3);
+	rewr_p->nit_section_array[nit->section_number].original_section_len = HILO(nit->section_length) + 3;
+	rewrite_nit_section(dest);
+	rewr_p->nit_section_array[nit->section_number].section_ok = true;
+	rewr_p->nit_section_array[nit->section_number].rewritten_section_len = HILO(((nit_t *)dest)->section_length) + 3;
+	log_message(log_module, MSG_INFO, "NIT section %d is cached", nit->section_number);
+	bool all_cached = true;
+	for (int i = 0; i <= nit->last_section_number; ++i) {
+		if (i > rewr_p->nit_section_count) {
+			log_message(log_module, MSG_ERROR, "NIT section_number is corrupted");
+			break;
+		}
+		if (!rewr_p->nit_section_array[i].section_ok) {
+			all_cached = false;
+			break;
+		}
+	}
+	if (all_cached) {
+		log_message(log_module, MSG_INFO, "All NIT sections are cached");
+		if (frequency_cnt == 0) log_message(log_module, MSG_WARN, "No frequencies kept. See config->freq_patch");
+	}
+}
 
 void nit_rewrite_new_global_packet(unsigned char *ts_packet, rewrite_parameters_t *rewrite_vars) { return; }

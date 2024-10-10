@@ -52,6 +52,8 @@ void init_rewr_v(rewrite_parameters_t *rewr_p)
 				.nit_version = -1,
 				.nit_needs_update = true,
 				.full_nit = NULL,
+				.nit_section_count = 0,
+				.nit_section_array = NULL,
 #endif
 				.rewrite_pmt = OPTION_UNDEFINED,
 				.rewrite_pat = OPTION_UNDEFINED,
