@@ -504,6 +504,12 @@ int main (int argc, char **argv)
 			if(iRet==-1)
 				exit(ERROR_CONF);
 		}
+#ifdef REWRITE_NIT_SUPPORT
+		else if((iRet=read_rewrite_nit_config(substring))) {
+			if (iRet==-1)
+				exit(ERROR_CONF);
+		}
+#endif // REWRITE_NIT_SUPPORT
 		else if((iRet=read_logging_configuration(&stats_infos, substring))) //Read the line concerning the logging parameters
 		{
 			if(iRet==-1)

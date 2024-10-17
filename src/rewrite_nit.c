@@ -46,9 +46,63 @@ typedef struct nit_freq_map {
 } nit_freq_map_t;
 
 
+nit_freq_map_t *freq_map = NULL;
+size_t frequency_cnt = 0;
 
 
+/**
+ * @brief Read a line of the configuration file to check if there is a rewrite nit parameter
+ * @details Sets the frequency map for the rewrite nit module
+ * @param substring The current line
+ * @return -1 on error, 0 on success
+ */
+int read_rewrite_nit_config(const char *substring)
+{
+	if (!strcmp(substring, "freq_patch")) {
+		substring = strtok(NULL, "=");
+		if (substring == NULL) {
+			return -1;
+		}
+		uint32_t old_freq = 0;
+		uint32_t new_freq = 0;
+		char *endptr = NULL;
+		errno = 0;
+		old_freq = strtoul(substring, &endptr, 16);
+		if (errno != 0) {
+			log_message(log_module, MSG_ERROR, "Invalid config: %s", strerror(errno));
+			return -1;
+		}
+		if (*endptr != '-' || *(endptr+1) != '>') {
+			return -1;
+		}
+		endptr += 2;
 
+		errno = 0;
+		new_freq = strtoul(endptr, &endptr, 16);
+		if (errno != 0) {
+			log_message(log_module, MSG_ERROR, "Invalid config: %s", strerror(errno));
+			return -1;
+		}
+
+		if (old_freq == 0 || new_freq == 0) {
+			log_message(log_module, MSG_ERROR, "Missing config frequency");
+			return -1;
+		}
+
+		frequency_cnt++;
+		freq_map = reallocarray(freq_map, frequency_cnt, sizeof(nit_freq_map_t));
+		if (freq_map == NULL) {
+			return -1;
+		}
+		freq_map[frequency_cnt - 1].oldfreq = old_freq;
+		freq_map[frequency_cnt - 1].newfreq = new_freq;
+		log_message(log_module, MSG_INFO, "Added frequency patch: old: 0x%08x new: 0x%08x", old_freq, new_freq);
+
+	} else {
+		return 0;
+	}
+	return 1;
+}
 
 
 void nit_rewrite_new_global_packet(unsigned char *ts_packet, rewrite_parameters_t *rewrite_vars) { return; }
