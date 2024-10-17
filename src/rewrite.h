@@ -161,4 +161,5 @@ void eit_rewrite_new_global_packet(unsigned char *ts_packet, rewrite_parameters_
 void eit_rewrite_new_channel_packet(unsigned char *ts_packet, rewrite_parameters_t *rewrite_vars, mumudvb_channel_t *channel,
 		unicast_parameters_t *unicast_vars, void *scam_vars_v);
 
+int read_rewrite_nit_config(const char *substring);
 #endif
