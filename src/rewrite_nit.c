@@ -228,7 +228,7 @@ void rewrite_nit_section(unsigned char *full_nit_section)
 	nit->section_length_hi = (new_section_length >> 8) & 0x0f;
 	nit->section_length_lo = new_section_length & 0xff;
 
-	ts_display_nit(log_module, (unsigned char *)nit);
+	ts_display_nit(log_module, MSG_INFO, (unsigned char *)nit);
 
 	setCRC32(full_nit_section);
 }

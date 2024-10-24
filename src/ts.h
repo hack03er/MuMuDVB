@@ -901,7 +901,7 @@ struct mumudvb_channel_t;
 void ts_display_pat(char* log_module,unsigned char *buf);
 void ts_display_country_avaibility_descriptor(char* log_module,unsigned char *buf);
 
-void ts_display_nit(char* mod_log_module,unsigned char *buf);
+void ts_display_nit(char* mod_log_module,int type, unsigned char *buf);
 void ts_display_nit_network_descriptors(char *log_module, unsigned char *buf,int descriptors_loop_len);
 void ts_display_network_name_descriptor(char* log_module, unsigned char *buf);
 void ts_display_multilingual_network_name_descriptor(char* log_module, unsigned char *buf);

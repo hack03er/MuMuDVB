@@ -677,11 +677,11 @@ void ts_display_pat(char* log_module,unsigned char *buf)
  * @param buf The buffer containing the NIT
  * @attention not the whole NIT is printed (network descriptors) because of the amount of some descriptors
  */
-void ts_display_nit(char *mod_log_module, unsigned char *buf)
+void ts_display_nit(char *mod_log_module, int type, unsigned char *buf)
 {
     nit_t *nit = (nit_t*)(buf);
-    log_message( mod_log_module, MSG_FLOOD,"-------------- Display NIT ----------------");
-    log_message( mod_log_module, MSG_FLOOD,  "network id 0x%04x section_length %d version %i "
+    log_message( mod_log_module, type,"-------------- Display NIT ----------------");
+    log_message( mod_log_module, type,  "network id 0x%04x section_length %d version %i "
                                              "section_number %d last_section_number %d current_next_indicator %d",
                  HILO(nit->network_id),
                  HILO(nit->section_length),
@@ -691,19 +691,19 @@ void ts_display_nit(char *mod_log_module, unsigned char *buf)
                  nit->current_next_indicator);
 
     if(nit->current_next_indicator == 0) {
-        log_message( mod_log_module, MSG_FLOOD,"The current_next_indicator is set to 0, "
+        log_message( mod_log_module, type,"The current_next_indicator is set to 0, "
                                                "this NIT is not valid for the current stream");
     }
 
 
     // network descriptors
-    log_message(mod_log_module, MSG_FLOOD, "network descriptor length: %d",
+    log_message(mod_log_module, type, "network descriptor length: %d",
                 HILO(nit->network_descriptor_length));
 
     nit_mid_t *nit_mid = (nit_mid_t *)((unsigned char *)nit + NIT_LEN + HILO(nit->network_descriptor_length));
 
     // transport descriptors
-    log_message(mod_log_module, MSG_FLOOD, "transport stream loop length: %d",
+    log_message(mod_log_module, type, "transport stream loop length: %d",
                 HILO(nit_mid->transport_stream_loop_length));
     char * tab_log_module = calloc(1, strlen(mod_log_module) + 2 + 1);
     strcpy(tab_log_module, mod_log_module);
@@ -711,7 +711,7 @@ void ts_display_nit(char *mod_log_module, unsigned char *buf)
     ts_display_nit_transport_stream_loop(tab_log_module, (unsigned char *)nit_mid + SIZE_NIT_MID,
                                          HILO(nit_mid->transport_stream_loop_length));
 
-    log_message( mod_log_module, MSG_FLOOD,"-------------- NIT Displayed ----------------");
+    log_message( mod_log_module, type,"-------------- NIT Displayed ----------------");
 }
 
 
