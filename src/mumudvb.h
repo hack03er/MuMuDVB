@@ -131,10 +131,7 @@ We cannot discover easily the MTU with unconnected UDP
 
 #define SAP_GROUP_LENGTH 20
 
-/** define bool for plain C code **/
-#ifndef __cplusplus
-    typedef enum { false = 0, true = !false } bool;
-#endif
+#include <stdbool.h>
 
 enum
 {
