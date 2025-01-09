@@ -388,7 +388,7 @@ int sdt_rewrite_new_global_packet(unsigned char *ts_packet, rewrite_parameters_t
 	}
 	//To avoid the duplicates, we have to update the continuity counter
 	rewrite_vars->sdt_continuity_counter++;
-	rewrite_vars->sdt_continuity_counter= rewrite_vars->sdt_continuity_counter % 32;
+	rewrite_vars->sdt_continuity_counter= rewrite_vars->sdt_continuity_counter % 16;
 	return 0;
 }
 

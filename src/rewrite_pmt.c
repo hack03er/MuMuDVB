@@ -212,7 +212,7 @@ int pmt_channel_rewrite(mumudvb_channel_t *channel) {
 int pmt_send_packet(unsigned char *pmt_ts_packet, mumudvb_channel_t *channel) {
 	//Everything is good, send the generated packet
 	channel->pmt_continuity_counter++;
-	channel->pmt_continuity_counter = channel->pmt_continuity_counter % 32;
+	channel->pmt_continuity_counter = channel->pmt_continuity_counter % 16;
 	memcpy(pmt_ts_packet, channel->generated_pmt, TS_PACKET_SIZE);
 	set_continuity_counter(pmt_ts_packet, channel->pmt_continuity_counter);
 	return 1;
