@@ -170,4 +170,6 @@ void eit_rewrite_new_channel_packet(unsigned char *ts_packet, rewrite_parameters
 		unicast_parameters_t *unicast_vars, void *scam_vars_v);
 
 int read_rewrite_nit_config(const char *substring);
+
+bool table_needs_update(char *mod_log_module, const int stored_version, unsigned char *buf);
 #endif
