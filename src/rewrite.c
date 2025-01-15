@@ -273,3 +273,16 @@ void set_continuity_counter(unsigned char *buf,int continuity_counter)
 	ts_header->continuity_counter=continuity_counter;
 }
 
+bool table_needs_update(char *mod_log_module, const int stored_version, unsigned char *buf) {
+	tbl_h_t *table=(tbl_h_t *)(get_ts_begin(buf));
+
+	if (!table) return false;
+	if (table->current_next_indicator == 0) {
+		return false;
+	}
+	if (table->version_number!=stored_version) {
+		log_message(mod_log_module, MSG_DEBUG,"Need update. stored version : %d, new: %d\n",stored_version,table->version_number);
+		return true;
+	}
+	return false;
+}
