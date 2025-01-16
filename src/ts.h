@@ -480,9 +480,11 @@ typedef struct {
 #ifdef __BIG_ENDIAN__
    uint8_t section_syntax_indicator               :1;
    uint8_t                                        :3;
-   uint8_t section_length_hi                      :4;
+   uint8_t section_length_zero                    :2;
+   uint8_t section_length_hi                      :2;
 #else
-   uint8_t section_length_hi                      :4;
+   uint8_t section_length_hi                      :2;
+   uint8_t section_length_zero                    :2;
    uint8_t                                        :3;
    uint8_t section_syntax_indicator               :1;
 #endif
