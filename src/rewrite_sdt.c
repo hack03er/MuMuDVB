@@ -155,7 +155,8 @@ int sdt_channel_rewrite(rewrite_parameters_t *rewrite_vars, mumudvb_channel_t *c
 
 	if(!channel->service_id)
 	{
-		log_message( log_module, MSG_WARN,"Cannot rewrite a program without the service_id set. We deactivate SDT rewrititng for this channel %d : \"%s\"\n", curr_channel, channel->name);
+		log_message( log_module, MSG_WARN,"Cannot rewrite a program without the service_id set. "
+            "We deactivate SDT rewrititng for this channel %d : \"%s\"\n", curr_channel, channel->name);
 		channel->sdt_rewrite_skip=1;
 		return 0;
 	}
@@ -235,7 +236,7 @@ int sdt_channel_rewrite(rewrite_parameters_t *rewrite_vars, mumudvb_channel_t *c
 			else
 			{
 				log_message( log_module, MSG_DETAIL,"NEW program for channel %d : \"%s\". service_id : %d\n", curr_channel, channel->name,channel->service_id);
-				//we found a announce for a program in our stream, we keep it
+				//we found an announcement for a program in our stream, we keep it
 				//We fill the descriptor loop length
 				t_buffer_ptr->descriptors_loop_length_lo = (loop_length & 0x00FF);
 				t_buffer_ptr->descriptors_loop_length_hi = (loop_length & 0xFF00)>>8;
@@ -375,8 +376,9 @@ int sdt_rewrite_new_global_packet(unsigned char *ts_packet, rewrite_parameters_t
 }
 
 
-/** @brief This function is called when a new SDT packet for a channel is there and we asked for rewrite
- * This function copy the rewritten SDT to the buffer. And checks if the SDT was changed so the rewritten version have to be updated
+/** @brief This function is called when a new SDT packet for a channel is there, and we asked for rewrite
+ * This function copies the rewritten SDT to the buffer and checks if the SDT was changed
+ * so the rewritten version has to be updated
  */
 int sdt_rewrite_new_channel_packet(unsigned char *ts_packet, rewrite_parameters_t *rewrite_vars, mumudvb_channel_t *channel, int curr_channel)
 {
