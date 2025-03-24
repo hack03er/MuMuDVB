@@ -334,6 +334,10 @@ typedef struct {
  *         names of services, the service provider, etc.
  *
  */
+
+#define SDT_ACTUAL_TS 0x42
+#define SDT_OTHER_TS 0x46
+
 typedef struct {
    uint8_t table_id                               :8;
 #ifdef __BIG_ENDIAN__
