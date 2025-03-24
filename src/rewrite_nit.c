@@ -105,6 +105,15 @@ int read_rewrite_nit_config(const char *substring)
 	return 1;
 }
 
+/**
+ * @brief Check if nit section describes the actual transport stream
+ */
+bool actual_subtable_id(tbl_h_t *section)
+{
+	const sdt_t *sdt_section = (sdt_t*)section;
+	return sdt_section->table_id == NIT_ACTUAL_NETWORK;
+}
+
 ts_header_t nit_ts_header =  {
 	.sync_byte = TS_SYNC_BYTE,
 	.transport_error_indicator = 0,

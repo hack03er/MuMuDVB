@@ -473,6 +473,9 @@ typedef struct {
  *
  */
 
+#define NIT_ACTUAL_NETWORK 0x40
+#define NIT_OTHER_NETWORK 0x41
+
 #define NIT_LEN 10
 
 typedef struct {
