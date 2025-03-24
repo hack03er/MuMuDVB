@@ -383,7 +383,7 @@ void nit_rewrite_new_global_packet(unsigned char *ts_packet, rewrite_parameters_
 			log_message(log_module, MSG_DEBUG, "NIT not yet valid, we get a new one (current_next_indicator == 0)");
 			return;
 		}
-		if (table_needs_update(log_module, rewrite_vars->nit_version, ts_packet)) {
+		if (table_needs_update(log_module, rewrite_vars->nit_version, ts_packet, actual_subtable_id)) {
 			rewrite_vars->nit_version = nit->version_number;
 
 			rewrite_vars->nit_section_count = nit->last_section_number + 1;
