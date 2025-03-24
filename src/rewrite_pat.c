@@ -175,7 +175,7 @@ void pat_rewrite_new_global_packet(unsigned char *ts_packet, rewrite_parameters_
 	/*Check the version before getting the full packet*/
 	if(!rewrite_vars->pat_needs_update)
 	{
-		rewrite_vars->pat_needs_update=table_needs_update(log_module, rewrite_vars->pat_version, ts_packet);
+		rewrite_vars->pat_needs_update=table_needs_update(log_module, rewrite_vars->pat_version, ts_packet, NULL);
 	}
 	/*We need to update the full packet, we download it*/
 	if(rewrite_vars->pat_needs_update)
