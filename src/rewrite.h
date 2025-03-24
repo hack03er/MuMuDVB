@@ -172,5 +172,6 @@ void eit_rewrite_new_channel_packet(unsigned char *ts_packet, rewrite_parameters
 int read_rewrite_nit_config(const char *substring);
 void nit_rewrite_new_global_packet(unsigned char *ts_packet, rewrite_parameters_t *rewrite_vars);
 
-bool table_needs_update(char *mod_log_module, const int stored_version, unsigned char *buf);
+bool table_needs_update(char *mod_log_module, int stored_version, unsigned char *buf,
+	bool (*table_condition)(tbl_h_t *table));
 #endif
